@@ -8,10 +8,11 @@
 |**nickname** |string | nom en un ou plusieurs termes|short unique|
 |**abstract** | string|résumé du personnage |long|
 |**birthDate** |date | date de naissance|--a voir--|
-|**era** | string|époque|one to many NULL|
 |**deathDate** |date | date de mort|--a voir--NULL |
 
 ## Users
+En fait on va utiliser le User du SecurityBundle (cf Memento)
+
 |Propriété |Type| Descr|Autre |
 |---|:-:|:-:| :-:|
 |**id** | int| |unique|
