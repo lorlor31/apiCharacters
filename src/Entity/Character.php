@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\CharacterRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -35,6 +37,17 @@ class Character
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatarImage = null;
+
+    /**
+     * @var Collection<int, personality>
+     */
+    #[ORM\ManyToMany(targetEntity: personality::class, inversedBy: 'characters')]
+    private Collection $personality;
+
+    public function __construct()
+    {
+        $this->personality = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -121,6 +134,30 @@ class Character
     public function setAvatarImage(?string $avatarImage): static
     {
         $this->avatarImage = $avatarImage;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, personality>
+     */
+    public function getPersonality(): Collection
+    {
+        return $this->personality;
+    }
+
+    public function addPersonality(personality $personality): static
+    {
+        if (!$this->personality->contains($personality)) {
+            $this->personality->add($personality);
+        }
+
+        return $this;
+    }
+
+    public function removePersonality(personality $personality): static
+    {
+        $this->personality->removeElement($personality);
 
         return $this;
     }
