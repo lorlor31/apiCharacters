@@ -37,7 +37,8 @@ En fait on va utiliser le User du SecurityBundle (cf Memento)
 |**content** | string|contenu|long|
 |**story_id** | int| ||
 
-## Traits (many-to-one) plusieurs personnage pkusieurs Traits
+## Traits== Personality (many-to-many) plusieurs personnages pkusieurs Traits
+
 - gentil
 - méchant
 - drôle
@@ -50,6 +51,12 @@ En fait on va utiliser le User du SecurityBundle (cf Memento)
 |---|:-:|:-:| :-:|
 |**id** | int| ||
 |**value** | int| ||
+
+## Character_personality(many-to-many)
+|Propriété |Type| Descr|Autre |
+|---|:-:|:-:| :-:|
+|**character_id** | int| ||
+|**personality_id** | int| ||
 
 ## Tags (many-to-many)
 - action

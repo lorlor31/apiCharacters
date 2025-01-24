@@ -27,6 +27,15 @@ class Character
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deathDate = null;
 
+    #[ORM\Column(type: Types::TEXT)]
+    private ?string $long_description = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $backgroundImage = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatarImage = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -76,6 +85,42 @@ class Character
     public function setDeathDate(?\DateTimeInterface $deathDate): static
     {
         $this->deathDate = $deathDate;
+
+        return $this;
+    }
+
+    public function getLongDescription(): ?string
+    {
+        return $this->long_description;
+    }
+
+    public function setLongDescription(string $long_description): static
+    {
+        $this->long_description = $long_description;
+
+        return $this;
+    }
+
+    public function getBackgroundImage(): ?string
+    {
+        return $this->backgroundImage;
+    }
+
+    public function setBackgroundImage(?string $backgroundImage): static
+    {
+        $this->backgroundImage = $backgroundImage;
+
+        return $this;
+    }
+
+    public function getAvatarImage(): ?string
+    {
+        return $this->avatarImage;
+    }
+
+    public function setAvatarImage(?string $avatarImage): static
+    {
+        $this->avatarImage = $avatarImage;
 
         return $this;
     }

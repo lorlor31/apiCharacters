@@ -32,8 +32,6 @@ class CharacterController extends AbstractController
             return $this->json([
                 "fail" =>["this character doesn't exist"]],Response::HTTP_NOT_FOUND);  
             }
-
-        // we catch the character frome the database
         return $this->json($character, Response::HTTP_OK,[], );
     }
 
@@ -41,14 +39,8 @@ class CharacterController extends AbstractController
     #[Route('characters/create', name: 'app_characters_create', methods: ['POST'])]
     public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
-
-        // we catch the JSON in the request
         $data = $request->getContent();
-
-        // we manage the case where the JSON is in the wrong format
         try {
-            // we transform the brut JSON in character entity
-           
             $character = $serializer->deserialize($data, Character::class, 'json');
         } catch (NotEncodableValueException $exception) {
             return $this->json([
@@ -57,24 +49,18 @@ class CharacterController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // we check if there is error
+        // Validation
         $errors = $validator->validate($character);
         if (count($errors) > 0) {
-
             $dataErrors = [];
-            
             foreach ($errors as $error) {
-                
             $dataErrors[$error->getPropertyPath()] = $error->getMessage();
             }
-
             return $this->json(["error" => ["message" => $dataErrors]], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $entityManager->persist($character);
-
         $entityManager->flush();
-        
         return $this->json($character, Response::HTTP_CREATED, ["Location" => $this->generateUrl("app_characters")], 
        );
     }
@@ -89,7 +75,6 @@ class CharacterController extends AbstractController
                 ]
                 , Response::HTTP_BAD_REQUEST);
             }
-
             try {
                 $em->remove($character);
                 $em->flush();
@@ -131,23 +116,17 @@ class CharacterController extends AbstractController
             return $this->json([
                 "fail" =>["this character doesn't exist"]],Response::HTTP_NOT_FOUND);  
             }
-
-
         try {
-        //we catch the JSON in the request
             $updatedCharacter = $serializer->deserialize($request->getContent(),
                 Character::class, 
                 'json', 
-            
                 [AbstractNormalizer::OBJECT_TO_POPULATE => $currentCharacter]);
         }catch (NotEncodableValueException $exception) {
-            
             return $this->json([
                 "error" =>
                 ["message" => $exception->getMessage()]
             ], Response::HTTP_BAD_REQUEST);
         }
-        // we check if there is error
         $errors = $validator->validate($updatedCharacter);
         if (count($errors) > 0) {
             $dataErrors = [];            
