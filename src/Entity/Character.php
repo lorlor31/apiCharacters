@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
 #[ORM\Table(name: '`character`')]
@@ -15,38 +16,48 @@ class Character
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['character'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['character'])]
     private ?string $nickname = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['character'])]
     private ?string $abstract = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['character'])]
     private ?\DateTimeInterface $birthDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['character'])]
     private ?\DateTimeInterface $deathDate = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['character'])]
     private ?string $long_description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['character'])]
     private ?string $backgroundImage = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['character'])]
     private ?string $avatarImage = null;
 
     /**
-     * @var Collection<int, personality>
+     * @var Collection<int, Personality>
      */
-    #[ORM\ManyToMany(targetEntity: personality::class, inversedBy: 'characters')]
-    private Collection $personality;
+    #[ORM\ManyToMany(targetEntity: Personality::class, inversedBy: 'characters')]
+    #[Groups(['character','character_personalities'])]
+    private Collection $personalities;
 
+   
     public function __construct()
     {
-        $this->personality = new ArrayCollection();
+        $this->personalities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -139,26 +150,28 @@ class Character
     }
 
     /**
-     * @return Collection<int, personality>
+     * @return Collection<int, Personality>
      */
-    public function getPersonality(): Collection
+    public function getPersonalities(): Collection
     {
-        return $this->personality;
+        return $this->personalities;
     }
 
-    public function addPersonality(personality $personality): static
+    public function addPersonality(Personality $personality): static
     {
-        if (!$this->personality->contains($personality)) {
-            $this->personality->add($personality);
+        if (!$this->personalities->contains($personality)) {
+            $this->personalities->add($personality);
         }
 
         return $this;
     }
 
-    public function removePersonality(personality $personality): static
+    public function removePersonality(Personality $personality): static
     {
-        $this->personality->removeElement($personality);
+        $this->personalities->removeElement($personality);
 
         return $this;
     }
+
+
 }

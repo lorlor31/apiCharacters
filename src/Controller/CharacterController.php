@@ -22,7 +22,8 @@ class CharacterController extends AbstractController
     public function index(CharacterRepository $characterRepository): JsonResponse
     {
         $data = $characterRepository->findAll();
-        return $this->json($data,200,[],  );
+        return $this->json($data,200,[],["groups"=>['character','character_personalities']]
+    );
     }
 
     #[Route('characters/{id}', name: 'app_characters_show', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -32,7 +33,8 @@ class CharacterController extends AbstractController
             return $this->json([
                 "fail" =>["this character doesn't exist"]],Response::HTTP_NOT_FOUND);  
             }
-        return $this->json($character, Response::HTTP_OK,[], );
+        return $this->json($character, Response::HTTP_OK,[],["groups"=>['character','character_personalities']] 
+    );
     }
 
 
