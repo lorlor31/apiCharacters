@@ -18,7 +18,7 @@ date_default_timezone_set('Europe/Paris');
 
 class CharacterController extends AbstractController
 {
-    #[Route('characters', name: 'app_characters')]
+    #[Route('characters', name: 'api_characters')]
     public function index(CharacterRepository $characterRepository): JsonResponse
     {
         $data = $characterRepository->findAll();
@@ -26,7 +26,7 @@ class CharacterController extends AbstractController
     );
     }
 
-    #[Route('characters/{id}', name: 'app_characters_show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('characters/{id}', name: 'api_characters_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Character $character): JsonResponse
     {
         if (!$character) {
@@ -38,7 +38,7 @@ class CharacterController extends AbstractController
     }
 
 
-    #[Route('characters/create', name: 'app_characters_create', methods: ['POST'])]
+    #[Route('characters/create', name: 'api_characters_create', methods: ['POST'])]
     public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $data = $request->getContent();
@@ -60,14 +60,13 @@ class CharacterController extends AbstractController
             }
             return $this->json(["error" => ["message" => $dataErrors]], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
         $entityManager->persist($character);
         $entityManager->flush();
-        return $this->json($character, Response::HTTP_CREATED, ["Location" => $this->generateUrl("app_characters")], 
+        return $this->json($character, Response::HTTP_CREATED, ["Location" => $this->generateUrl("api_characters")], 
        );
     }
 
-    #[Route('/characters/delete/{id}', name: 'app_characters_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[Route('/characters/delete/{id}', name: 'api_characters_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function delete(CharacterRepository $characterrepos,$id,EntityManagerInterface $em): JsonResponse
     {
             $character=$characterrepos->find($id);
@@ -94,7 +93,7 @@ class CharacterController extends AbstractController
             }
     }
 
-    #[Route('characters/edit/{id}', name: 'app_characters_edit', methods: ['GET'])]
+    #[Route('characters/edit/{id}', name: 'api_characters_edit', methods: ['GET'])]
     public function edit(Character $character): JsonResponse
     {
         if (!$character) {
@@ -111,7 +110,7 @@ class CharacterController extends AbstractController
     }
 
 
-    #[Route('characters/update/{id}', name:"app_characters_update", methods:['PUT'])]
+    #[Route('characters/update/{id}', name:"api_characters_update", methods:['PUT'])]
     public function update(Request $request, SerializerInterface $serializer, Character $currentCharacter, EntityManagerInterface $em,ValidatorInterface $validator,CharacterRepository $characterRepository): JsonResponse 
     {   
         if (!$currentCharacter) {
@@ -139,10 +138,10 @@ class CharacterController extends AbstractController
         }
         $em->persist($updatedCharacter);
         $em->flush();
-        return $this->json($updatedCharacter, Response::HTTP_CREATED,["Location" => $this->generateUrl("app_characters")],["groups"=>['characterLinked']]);
+        return $this->json($updatedCharacter, Response::HTTP_CREATED,["Location" => $this->generateUrl("api_characters")],["groups"=>['characterLinked']]);
    }
 
-   #[Route('characters/{nickname}', name: 'app_characters_name', methods: ['GET'], requirements: ['nickname' => '[a-zA-Z]+'])]
+   #[Route('characters/{nickname}', name: 'api_characters_name', methods: ['GET'], requirements: ['nickname' => '[a-zA-Z]+'])]
    public function findByName(CharacterRepository $characterRepository,$nickname): JsonResponse
    {
        $data = $characterRepository->findByNickname($nickname);

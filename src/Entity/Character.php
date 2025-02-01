@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
 #[ORM\Table(name: '`character`')]
@@ -20,22 +21,31 @@ class Character
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255, maxMessage: "Le nom ne doit pas dépasser 255 caractères.")]
     #[Groups(['character'])]
     private ?string $nickname = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255, maxMessage: "Le résumé ne doit pas dépasser 255 caractères.")]
     #[Groups(['character'])]
     private ?string $abstract = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\DateTime]
+    #[Assert\NotBlank]
     #[Groups(['character'])]
     private ?\DateTimeInterface $birthDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Assert\DateTime]
     #[Groups(['character'])]
     private ?\DateTimeInterface $deathDate = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\Length(max: 255, maxMessage: "Le résumé ne doit pas dépasser 255 caractères.")]
+    #[Assert\NotBlank]
     #[Groups(['character'])]
     private ?string $long_description = null;
 
