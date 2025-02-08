@@ -14,13 +14,19 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Filesystem\Filesystem;
+
 date_default_timezone_set('Europe/Paris');
 
 class CharacterController extends AbstractController
 {
     #[Route('characters', name: 'api_characters')]
-    public function index(CharacterRepository $characterRepository): JsonResponse
+    public function index(CharacterRepository $characterRepository,LoggerInterface $logger): JsonResponse
     {
+        $logger->info('I just got the logger');
+
         $data = $characterRepository->findAll();
         return $this->json($data,200,[],["groups"=>['character','character_personalities']]
     );
@@ -36,8 +42,8 @@ class CharacterController extends AbstractController
         return $this->json($character, Response::HTTP_OK,[],["groups"=>['character','character_personalities']] 
     );
     }
-
-
+    
+/* CAS AVEC json
     #[Route('characters/create', name: 'api_characters_create', methods: ['POST'])]
     public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
@@ -64,7 +70,78 @@ class CharacterController extends AbstractController
         $entityManager->flush();
         return $this->json($character, Response::HTTP_CREATED, ["Location" => $this->generateUrl("api_characters")], 
        );
+    } */
+// src/Controller/CharacterController.php
+
+
+    #[Route('characters/create', name: 'api_characters_create', methods: ['POST'])]
+    public function create(Request $request, CharacterRepository $characterRepository,
+    SerializerInterface $serializer, EntityManagerInterface $entityManager, 
+    ValidatorInterface $validator,LoggerInterface $logger): Response
+    {
+        // Crée un nouveau personnage
+        $character = new Character();
+        // Récupérer les données envoyées via FormData (non JSON)
+        $nickname = $request->get('nickname');
+        $abstract = $request->get('abstract');
+        $longDescription = $request->get('long_description');
+        $birthDate = $request->get('birthDate');
+        $deathDate = $request->get('deathDate');
+        // Gérer la date de mort (si présente)
+        if ($deathDate) {
+            $character->setDeathDate(new \DateTime($deathDate));
+        }
+        //Pour le fichier de l'avatar
+        $avatarImage = $request->files->get('avatar_image');
+        $logger->warning('Uploading avatar file', ['file' => $avatarImage]);
+        if (!$avatarImage instanceof UploadedFile) {
+            $logger->error('Aucun fichier reçu.');
+            return $this->json(['error' => 'Pas d\'upload'], 400);
+        }
+        $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/images';
+        // Assurer que le dossier existe
+        $filesystem = new Filesystem();
+        if (!$filesystem->exists($uploadsDir)) {
+        $filesystem->mkdir($uploadsDir, 0777);
+        }
+        // Générer un nom unique
+        $newFilename = uniqid() . '.' . $avatarImage->guessExtension();
+        // 🔹 Déplacer le fichier dans le dossier final
+        try {
+            $avatarImage->move($uploadsDir, $newFilename);
+        } catch (\Exception $e) {
+            $logger->error('Erreur lors du déplacement du fichier : ' . $e->getMessage());
+            return $this->json(['error' => 'File upload failed'], 500);
+        }
+        $logger->error('Uploading avatar file', ['file' => $avatarImage]); 
+        // Set les données dans l'entité
+        $character->setNickname($nickname);
+        $character->setAbstract($abstract);
+        $character->setLongDescription($longDescription);
+        $character->setBirthDate(new \DateTime($birthDate));
+        $character->setAvatarImage('uploads/images/avatars/' .$newFilename);
+        // Sauvegarde de l'entité dans la base de données
+        $entityManager->persist($character);
+        $entityManager->flush();
+
+        return $this->json([
+            'message' => 'Personnage créé avec succès',
+            'data' => $character,
+        ], Response::HTTP_OK);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     #[Route('/characters/delete/{id}', name: 'api_characters_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function delete(CharacterRepository $characterrepos,$id,EntityManagerInterface $em): JsonResponse

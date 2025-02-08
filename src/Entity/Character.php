@@ -9,9 +9,18 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
 #[ORM\Table(name: '`character`')]
+#[Vich\Uploadable]
+
+
+
+//TODO reprendre pour l'upload du fichier
+//erreur 500 apparue qd j'ai rajouté les propriétés file etc pour vich upload
+// retester sans sinon
 class Character
 {
     #[ORM\Id]
@@ -33,18 +42,18 @@ class Character
     private ?string $abstract = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Assert\DateTime]
     #[Assert\NotBlank]
     #[Groups(['character'])]
     private ?\DateTimeInterface $birthDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    #[Assert\DateTime]
+    // #[Assert\DateTime] => pas mis parce que ça bloque pour les dates dans l'heure ??
+    // à comprendre
     #[Groups(['character'])]
     private ?\DateTimeInterface $deathDate = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Assert\Length(max: 255, maxMessage: "Le résumé ne doit pas dépasser 255 caractères.")]
+    #[Assert\Length(max: 10000, maxMessage: "La description ne doit pas dépasser 10000 caractères.")]
     #[Assert\NotBlank]
     #[Groups(['character'])]
     private ?string $long_description = null;
@@ -55,7 +64,19 @@ class Character
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['character'])]
+    #[Vich\UploadableField(mapping: 'characters', fileNameProperty: 'avatarImage', size: 'imageSize')]
+    private ?string $avatarFile = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['character'])]
     private ?string $avatarImage = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['character'])]
+    private ?string $avatarSize= null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
 
     /**
      * @var Collection<int, Personality>
@@ -157,6 +178,34 @@ class Character
         $this->avatarImage = $avatarImage;
 
         return $this;
+    }
+
+
+    public function setAvatarFile(?File $avatarFile = null): void
+    {
+        $this->avatarFile = $avatarFile;
+
+        if (null !== $avatarFile) {
+            // It is required that at least one field changes if you are using doctrine
+            // otherwise the event listeners won't be called and the file is lost
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getAvatarFile(): ?File
+    {
+        return $this->avatarFile;
+    } 
+
+
+    public function setAvatarSize(?int $avatarSize): void
+    {
+        $this->avatarSize = $avatarSize;
+    }
+
+    public function getavatarSize(): ?int
+    {
+        return $this->avatarSize;
     }
 
     /**
