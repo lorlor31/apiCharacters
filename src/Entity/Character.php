@@ -16,11 +16,7 @@ use Symfony\Component\HttpFoundation\File\File;
 #[ORM\Table(name: '`character`')]
 #[Vich\Uploadable]
 
-
-
-//TODO reprendre pour l'upload du fichier
-//erreur 500 apparue qd j'ai rajouté les propriétés file etc pour vich upload
-// retester sans sinon
+#[ORM\HasLifecycleCallbacks]
 class Character
 {
     #[ORM\Id]
@@ -62,21 +58,20 @@ class Character
     #[Groups(['character'])]
     private ?string $backgroundImage = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    // #[ORM\Column(length: 255, nullable: true)] => ne pas mapper cette propriété
     #[Groups(['character'])]
     #[Vich\UploadableField(mapping: 'characters', fileNameProperty: 'avatarImage', size: 'imageSize')]
-    private ?string $avatarFile = null;
+    private ?File $avatarFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['character'])]
     private ?string $avatarImage = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['character'])]
-    private ?string $avatarSize= null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $updatedAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     /**
      * @var Collection<int, Personality>
@@ -84,6 +79,7 @@ class Character
     #[ORM\ManyToMany(targetEntity: Personality::class, inversedBy: 'characters')]
     #[Groups(['character','character_personalities'])]
     private Collection $personalities;
+
 
    
     public function __construct()
@@ -197,17 +193,6 @@ class Character
         return $this->avatarFile;
     } 
 
-
-    public function setAvatarSize(?int $avatarSize): void
-    {
-        $this->avatarSize = $avatarSize;
-    }
-
-    public function getavatarSize(): ?int
-    {
-        return $this->avatarSize;
-    }
-
     /**
      * @return Collection<int, Personality>
      */
@@ -232,5 +217,31 @@ class Character
         return $this;
     }
 
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    #[ORM\PrePersist]
+    public function setCreatedAt(): static
+    {
+        $this->createdAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAt(): static
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
 
 }

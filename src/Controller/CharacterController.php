@@ -79,7 +79,6 @@ class CharacterController extends AbstractController
     SerializerInterface $serializer, EntityManagerInterface $entityManager, 
     ValidatorInterface $validator,LoggerInterface $logger): Response
     {
-        // Crée un nouveau personnage
         $character = new Character();
         // Récupérer les données envoyées via FormData (non JSON)
         $nickname = $request->get('nickname');
@@ -87,39 +86,52 @@ class CharacterController extends AbstractController
         $longDescription = $request->get('long_description');
         $birthDate = $request->get('birthDate');
         $deathDate = $request->get('deathDate');
-        // Gérer la date de mort (si présente)
-        if ($deathDate) {
-            $character->setDeathDate(new \DateTime($deathDate));
-        }
+
         //Pour le fichier de l'avatar
         $avatarImage = $request->files->get('avatar_image');
-        $logger->warning('Uploading avatar file', ['file' => $avatarImage]);
-        if (!$avatarImage instanceof UploadedFile) {
-            $logger->error('Aucun fichier reçu.');
-            return $this->json(['error' => 'Pas d\'upload'], 400);
+        if ($avatarImage) {
+            if (!$avatarImage instanceof UploadedFile) {
+                $logger->error('Aucun fichier reçu.');
+                return $this->json(['error' => 'Pas d\'upload'], 400);
+            }
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/images/avatars';
+            // S'assurer que le dossier existe
+            $filesystem = new Filesystem();
+            if (!$filesystem->exists($uploadsDir)) {
+            $filesystem->mkdir($uploadsDir, 0777);
+            }
+            // Générer un nom unique
+            $newFilename = uniqid() . '.' . $avatarImage->guessExtension();
+            // Copier le fichier dans $uploadsDir
+            try {
+                $avatarImage->move($uploadsDir, $newFilename);
+            } catch (\Exception $e) {
+                $logger->error('Erreur lors du déplacement du fichier : ' . $e->getMessage());
+                return $this->json(['error' => 'File upload failed'], 500);
+            }
         }
-        $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/images';
-        // Assurer que le dossier existe
-        $filesystem = new Filesystem();
-        if (!$filesystem->exists($uploadsDir)) {
-        $filesystem->mkdir($uploadsDir, 0777);
-        }
-        // Générer un nom unique
-        $newFilename = uniqid() . '.' . $avatarImage->guessExtension();
-        // 🔹 Déplacer le fichier dans le dossier final
-        try {
-            $avatarImage->move($uploadsDir, $newFilename);
-        } catch (\Exception $e) {
-            $logger->error('Erreur lors du déplacement du fichier : ' . $e->getMessage());
-            return $this->json(['error' => 'File upload failed'], 500);
-        }
-        $logger->error('Uploading avatar file', ['file' => $avatarImage]); 
+
+
         // Set les données dans l'entité
         $character->setNickname($nickname);
         $character->setAbstract($abstract);
         $character->setLongDescription($longDescription);
         $character->setBirthDate(new \DateTime($birthDate));
-        $character->setAvatarImage('uploads/images/avatars/' .$newFilename);
+        $avatarImage ? $character->setAvatarImage($newFilename) : null;
+        $deathDate ? $character->setDeathDate(new \DateTime($deathDate)) : null;
+
+        // Validation
+        $errors = $validator->validate($character);
+        if (count($errors) > 0) {
+            $dataErrors = [];
+            foreach ($errors as $error) {
+            $dataErrors[$error->getPropertyPath()] = $error->getMessage();
+            }
+            $logger->critical('donnees envoyees', ['donnees' => $character]); // Recommandé
+            $logger->critical('erreurs de validation', ['erreurs' => $dataErrors]); // Recommandé
+            return $this->json(["error" => ["message" => $dataErrors]], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        
         // Sauvegarde de l'entité dans la base de données
         $entityManager->persist($character);
         $entityManager->flush();
